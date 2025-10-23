@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-g" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Otokonime</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+      .material-symbols-rounded {
+        font-family: 'Material Symbols Rounded';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+
+      /* Scrollbar styles */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--surface-container-highest);
+        border-radius: 10px;
+        border: 3px solid transparent;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--outline);
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      :root {
+        --primary: #4C662B;
+        --on-primary: #FFFFFF;
+        --primary-container: #CDEDA3;
+        --on-primary-container: #0E2000;
+        --secondary: #586249;
+        --on-secondary: #FFFFFF;
+        --secondary-container: #DCE7C8;
+        --on-secondary-container: #161E0A;
+        --tertiary: #386663;
+        --on-tertiary: #FFFFFF;
+        --tertiary-container: #BCECE7;
+        --on-tertiary-container: #00201E;
+        --error: #BA1A1A;
+        --on-error: #FFFFFF;
+        --error-container: #FFDAD6;
+        --on-error-container: #410002;
+        --background: #F9FAEF;
+        --on-background: #1A1C16;
+        --surface: #F9FAEF;
+        --on-surface: #1A1C16;
+        --surface-variant: #E1E4D5;
+        --on-surface-variant: #44483D;
+        --outline: #75796C;
+        --outline-variant: #C5C8BA;
+        --scrim: #000000;
+        --inverse-surface: #2F312A;
+        --inverse-on-surface: #F1F2E6;
+        --inverse-primary: #B1D18A;
+        --surface-dim: #DADBD0;
+        --surface-bright: #F9FAEF;
+        --surface-container-lowest: #FFFFFF;
+        --surface-container-low: #F3F4E9;
+        --surface-container: #EEEFE3;
+        --surface-container-high: #E8E9DE;
+        --surface-container-highest: #E2E3D8;
+      }
+
+      html.dark {
+        --primary: #B1D18A;
+        --on-primary: #1F3701;
+        --primary-container: #354E16;
+        --on-primary-container: #CDEDA3;
+        --secondary: #BFCBAD;
+        --on-secondary: #2A331E;
+        --secondary-container: #404A33;
+        --on-secondary-container: #DCE7C8;
+        --tertiary: #A0D0CB;
+        --on-tertiary: #003735;
+        --tertiary-container: #1F4E4B;
+        --on-tertiary-container: #BCECE7;
+        --error: #FFB4AB;
+        --on-error: #690005;
+        --error-container: #93000A;
+        --on-error-container: #FFDAD6;
+        --background: #12140E;
+        --on-background: #E2E3D8;
+        --surface: #12140E;
+        --on-surface: #E2E3D8;
+        --surface-variant: #44483D;
+        --on-surface-variant: #C5C8BA;
+        --outline: #8F9285;
+        --outline-variant: #44483D;
+        --scrim: #000000;
+        --inverse-surface: #E2E3D8;
+        --inverse-on-surface: #2F312A;
+        --inverse-primary: #4C662B;
+        --surface-dim: #12140E;
+        --surface-bright: #383A32;
+        --surface-container-lowest: #0C0F09;
+        --surface-container-low: #1A1C16;
+        --surface-container: #1E201A;
+        --surface-container-high: #282B24;
+        --surface-container-highest: #33362E;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+            },
+            colors: {
+              primary: 'var(--primary)',
+              'on-primary': 'var(--on-primary)',
+              'primary-container': 'var(--primary-container)',
+              'on-primary-container': 'var(--on-primary-container)',
+              secondary: 'var(--secondary)',
+              'on-secondary': 'var(--on-secondary)',
+              'secondary-container': 'var(--secondary-container)',
+              'on-secondary-container': 'var(--on-secondary-container)',
+              tertiary: 'var(--tertiary)',
+              'on-tertiary': 'var(--on-tertiary)',
+              'tertiary-container': 'var(--tertiary-container)',
+              'on-tertiary-container': 'var(--on-tertiary-container)',
+              error: 'var(--error)',
+              'on-error': 'var(--on-error)',
+              'error-container': 'var(--error-container)',
+              'on-error-container': 'var(--on-error-container)',
+              background: 'var(--background)',
+              'on-background': 'var(--on-background)',
+              surface: 'var(--surface)',
+              'on-surface': 'var(--on-surface)',
+              'surface-variant': 'var(--surface-variant)',
+              'on-surface-variant': 'var(--on-surface-variant)',
+              outline: 'var(--outline)',
+              'outline-variant': 'var(--outline-variant)',
+              scrim: 'var(--scrim)',
+              'inverse-surface': 'var(--inverse-surface)',
+              'inverse-on-surface': 'var(--inverse-on-surface)',
+              'inverse-primary': 'var(--inverse-primary)',
+              'surface-dim': 'var(--surface-dim)',
+              'surface-bright': 'var(--surface-bright)',
+              'surface-container-lowest': 'var(--surface-container-lowest)',
+              'surface-container-low': 'var(--surface-container-low)',
+              'surface-container': 'var(--surface-container)',
+              'surface-container-high': 'var(--surface-container-high)',
+              'surface-container-highest': 'var(--surface-container-highest)',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-background text-on-background">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

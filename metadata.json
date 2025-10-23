@@ -1,0 +1,5 @@
+{
+  "name": "Otokonime",
+  "description": "A mobile-first anime streaming app UI, designed to feel like a native Android experience, acting as a frontend client for the Kitanime API. It features Material Design 3, dark mode, and a responsive layout.",
+  "requestFramePermissions": []
+}
