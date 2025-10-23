@@ -75,13 +75,13 @@ const SearchPage: React.FC = () => {
 
       <div className="px-4 pb-4">
         {loading && (
-           <div className="grid grid-cols-3 gap-4">
-            {Array.from({ length: 9 }).map((_, index) => <AnimeCardSkeleton key={index} />)}
+           <div className="grid grid-cols-2 gap-4">
+            {Array.from({ length: 10 }).map((_, index) => <AnimeCardSkeleton key={index} />)}
            </div>
         )}
         {error && <div className="text-error">{error}</div>}
         {!loading && !error && results.length > 0 && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {results.map((anime) => (
               <AnimeCard key={anime.slug} anime={anime} />
             ))}
