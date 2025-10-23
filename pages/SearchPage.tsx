@@ -61,7 +61,7 @@ const SearchPage: React.FC = () => {
     <div>
       <AppBar title="Search" showBackButton />
       <div className="p-4">
-        <form onSubmit={handleFormSubmit} className="flex items-center gap-3 bg-surface-container-low rounded-full px-5 h-16">
+        <form onSubmit={handleFormSubmit} className="flex items-center gap-3 bg-surface-container-low rounded-full px-5 h-16 w-full text-on-surface-variant focus-within:ring-2 focus-within:ring-primary transition-all">
           <Icon name="search" className="text-on-surface-variant" />
           <input
             type="text"
