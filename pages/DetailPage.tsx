@@ -73,7 +73,7 @@ const EpisodeList: React.FC<{ episodes: Episode[] }> = ({ episodes }) => (
   <div className="p-6">
     <h2 className="text-xl font-medium mb-3">Episodes</h2>
     <div className="bg-surface-container rounded-2xl overflow-hidden">
-      {episodes.map((ep, index) => (
+      {episodes.reverse().map((ep, index) => (
         <Link key={ep.slug} href={`/watch/${ep.slug}`} className="block">
           <div className="p-4 flex items-center gap-4 hover:bg-surface-container-high active:bg-surface-container-highest transition-colors min-h-[5.5rem]">
             <div className="w-12 h-12 flex items-center justify-center bg-primary-container text-on-primary-container rounded-xl font-bold text-lg">
