@@ -34,7 +34,7 @@ const DetailPage: React.FC = () => {
 
   const actions = (
     <button onClick={handleBookmarkToggle} className="p-3 rounded-full hover:bg-surface-container active:bg-surface-container-high">
-      <Icon name={isBookmarked ? "bookmark_added": "boorkmark_add"} className={isBookmarked ? 'text-primary' : 'text-on-surface-variant'} />
+      <Icon name={isBookmarked ? "bookmark_added": "bookmark_add"} className={isBookmarked ? 'text-primary' : 'text-on-surface-variant'} />
     </button>
   );
 
