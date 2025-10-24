@@ -9,6 +9,7 @@ import Icon from '../components/Icon';
 import { MyListContext } from '../contexts/BookmarksContext';
 import AddToListSheet from '../components/AddToListSheet';
 import { AnimeCard } from '../components/AnimeCard';
+import Toast from '../components/Toast';
 
 type Tab = 'about' | 'episodes' | 'recommendations';
 
@@ -34,6 +35,8 @@ const DetailHeader: React.FC<{ anime: AnimeDetail }> = ({ anime }) => (
     <div className="relative overflow-hidden">
         {/* Blurred Background */}
         <img src={anime.poster} alt="" className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125" aria-hidden="true" />
+        {/* Scrim for AppBar contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/90 to-transparent"></div>
 
         <div className="relative pt-20 p-6 flex flex-col sm:flex-row gap-5 items-center sm:items-end">
@@ -50,9 +53,13 @@ const DetailHeader: React.FC<{ anime: AnimeDetail }> = ({ anime }) => (
         </div>
         <div className="relative flex flex-wrap gap-2 p-6 pt-2 justify-center sm:justify-start">
             {anime.genres?.map(genre => (
-                <div key={genre.slug} className="px-3 py-1.5 text-sm font-medium bg-surface-container-high text-on-surface-variant rounded-lg">
+                <Link
+                    to={`/genre/${genre.slug}`}
+                    key={genre.slug}
+                    className="px-3 py-1.5 text-sm font-medium bg-surface-container-high text-on-surface-variant rounded-lg hover:bg-surface-container-highest transition-colors"
+                >
                     {genre.name}
-                </div>
+                </Link>
             ))}
         </div>
     </div>
@@ -215,6 +222,7 @@ const DetailPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('about');
     const [isScrolled, setIsScrolled] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [toastInfo, setToastInfo] = useState<{ message: string; visible: boolean; actionTo?: string }>({ message: '', visible: false, actionTo: undefined });
 
     useEffect(() => {
         const mainEl = scrollRef.current;
@@ -246,6 +254,56 @@ const DetailPage: React.FC = () => {
 
     const savedItem = animeData ? myListContext?.getItem(animeData.slug) : undefined;
     const currentStatus = savedItem?.list_status || null;
+    
+    const showToast = (message: string, newStatus?: ListStatus) => {
+        setToastInfo({
+            message,
+            visible: true,
+            actionTo: newStatus ? `/my-list?status=${newStatus}` : undefined
+        });
+        const timer = setTimeout(() => {
+            setToastInfo({ message: '', visible: false, actionTo: undefined });
+        }, 4000);
+    };
+
+    const handleShare = async () => {
+        if (!animeData) return;
+    
+        const shareUrl = `${window.location.origin}/anime/${animeData.slug}`;
+    
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: animeData.title,
+                    text: `Check out ${animeData.title} on Otokonime!`,
+                    url: shareUrl,
+                });
+            } catch (error) {
+                console.error('Error sharing:', error);
+            }
+        } else {
+            // Fallback: copy to clipboard
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                showToast('Link copied to clipboard!');
+            } catch (error) {
+                console.error('Failed to copy:', error);
+                showToast('Failed to copy link.');
+            }
+        }
+    };
+
+    const handleStatusChange = (newStatus: ListStatus) => {
+        const statusLabel = formatStatusLabel(newStatus);
+        const message = currentStatus === null 
+            ? `Added to "${statusLabel}".`
+            : `Moved to "${statusLabel}".`;
+        showToast(message, newStatus);
+    };
+
+    const handleRemove = () => {
+        showToast('Removed from your list.');
+    };
 
     const renderTabContent = () => {
         if (!animeData) return null;
@@ -261,11 +319,19 @@ const DetailPage: React.FC = () => {
         }
     };
 
+    const appBarActions = (
+        <button onClick={handleShare} className={`p-3 -mr-3 rounded-full transition-colors ${isScrolled ? 'hover:bg-surface-container active:bg-surface-container-high' : 'hover:bg-white/10 active:bg-white/20'}`}>
+            <Icon name="share" />
+        </button>
+    );
+
+
     return (
         <div className="bg-background h-screen">
              <AppBar 
                 showBackButton 
                 title={isScrolled ? animeData?.title : ''}
+                actions={animeData ? appBarActions : undefined}
                 className={`fixed top-0 left-0 right-0 mx-auto max-w-screen-sm transition-all duration-300 ${isScrolled ? 'bg-surface-container-low text-on-surface' : 'bg-transparent text-white'}`}
             />
             <div ref={scrollRef} className="absolute inset-0 overflow-y-auto">
@@ -295,11 +361,20 @@ const DetailPage: React.FC = () => {
                 </button>
             )}
 
+            {toastInfo.visible && (
+                <Toast 
+                    message={toastInfo.message}
+                    action={toastInfo.actionTo ? { text: 'View List', to: toastInfo.actionTo } : undefined}
+                />
+            )}
+
             {isSheetOpen && animeData && (
                 <AddToListSheet
                     anime={animeData}
                     currentStatus={currentStatus}
                     onClose={() => setIsSheetOpen(false)}
+                    onStatusChange={handleStatusChange}
+                    onRemove={handleRemove}
                 />
             )}
         </div>

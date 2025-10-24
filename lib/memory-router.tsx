@@ -102,11 +102,15 @@ export const Switch: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const childrenArray = React.Children.toArray(children) as React.ReactElement[];
 
   for (const child of childrenArray) {
-    if (React.isValidElement(child) && child.props.path) {
-        const match = matchPath(child.props.path, context.path);
-        if (match) {
-            const Component = child.props.component;
-            return <Component params={match.params} />;
+    if (React.isValidElement(child)) {
+        // FIX: Cast child.props to safely access properties and resolve 'unknown' type errors.
+        const props = child.props as { path?: string; component: React.ComponentType<{ params?: Record<string, string> }> };
+        if (props.path) {
+            const match = matchPath(props.path, context.path);
+            if (match) {
+                const Component = props.component;
+                return <Component params={match.params} />;
+            }
         }
     }
   }

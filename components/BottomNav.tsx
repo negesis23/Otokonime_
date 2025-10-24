@@ -21,12 +21,12 @@ const BottomNav: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center gap-2 w-28 transition-colors duration-200 ${
+              className={`group flex flex-col items-center justify-center gap-2 w-28 transition-colors duration-200 ${
                   isActive ? 'text-on-surface' : 'text-on-surface-variant'
                 }`}
             >
               <>
-                <div className={`flex items-center justify-center h-9 w-20 rounded-3xl ${isActive ? 'bg-secondary-container' : ''}`}>
+                <div className={`flex items-center justify-center h-9 w-20 rounded-3xl transition-colors duration-200 ${isActive ? 'bg-secondary-container' : 'group-hover:bg-surface-container'}`}>
                   <Icon name={item.icon} className="text-3xl" />
                 </div>
                 <span className={`text-sm font-medium ${isActive ? 'text-on-surface' : 'text-on-surface-variant'}`}>{item.label}</span>

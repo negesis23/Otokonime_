@@ -1,9 +1,10 @@
-import React, { useContext, useState, useMemo } from 'react';
-import { Link } from '../lib/memory-router';
+import React, { useContext, useState, useMemo, useEffect } from 'react';
+import { Link, useSearch } from '../lib/memory-router';
 import { MyListContext } from '../contexts/BookmarksContext';
 import Icon from '../components/Icon';
-import type { ListStatus, MyListItem, OngoingAnime, CompleteAnime, AnimeDetail } from '../types';
+import type { ListStatus, MyListItem } from '../types';
 import AddToListSheet from '../components/AddToListSheet';
+import Toast from '../components/Toast';
 
 const LIST_TABS: { status: ListStatus, label: string }[] = [
     { status: 'watching', label: 'Watching' },
@@ -13,62 +14,52 @@ const LIST_TABS: { status: ListStatus, label: string }[] = [
     { status: 'dropped', label: 'Dropped' },
 ];
 
-// Re-creating the episode info logic locally for MyListItemCard
-const getEpisodeInfo = (anime: MyListItem): string | null => {
-    const isOngoing = (a: MyListItem): a is MyListItem & OngoingAnime => 'current_episode' in a && a.current_episode !== undefined;
-    const isComplete = (a: MyListItem): a is MyListItem & CompleteAnime => 'episode_count' in a && a.episode_count !== undefined;
-
-    if (isOngoing(anime)) {
-        const currentEpisode = anime.current_episode;
-        if (!currentEpisode) return null;
-        const lowerEpisode = currentEpisode.toLowerCase();
-        const numbers = currentEpisode.match(/\d+([.-]\d+)?/g);
-        const episodeNumber = numbers ? numbers.pop() : null;
-
-        if (episodeNumber) {
-            if (lowerEpisode.includes('ova')) return `OVA ${episodeNumber}`;
-            if (lowerEpisode.includes('special')) return `SP ${episodeNumber}`;
-            return `Episode ${episodeNumber}`;
-        }
-        if (lowerEpisode.includes('ova')) return 'OVA';
-        if (lowerEpisode.includes('special')) return 'Special';
-        if (lowerEpisode.includes('movie')) return 'Movie';
-        return currentEpisode; // Fallback
-    } else if (isComplete(anime)) {
-        return `${anime.episode_count} Eps`;
-    }
-    return null;
+const formatStatusLabel = (status: ListStatus) => {
+    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
-
-const MyListItemCard: React.FC<{ anime: MyListItem; onEdit: (anime: MyListItem) => void; }> = ({ anime, onEdit }) => {
-    const episodeInfo = getEpisodeInfo(anime);
-
-    return (
-        <div className="flex items-center gap-4 p-2 rounded-2xl hover:bg-surface-container-high transition-colors">
-            <Link to={`/anime/${anime.slug}`} className="flex-shrink-0">
-                <img src={anime.poster} alt={anime.title} className="w-16 h-24 object-cover rounded-lg" />
-            </Link>
-            <Link to={`/anime/${anime.slug}`} className="flex-1 min-w-0">
-                <p className="font-medium text-on-surface truncate">{anime.title}</p>
-                {episodeInfo && <p className="text-sm text-on-surface-variant mt-1">{episodeInfo}</p>}
-            </Link>
-            <button
-                onClick={() => onEdit(anime)}
-                className="p-3 rounded-full text-on-surface-variant hover:bg-surface-container-highest"
-                aria-label={`Edit status for ${anime.title}`}
-            >
-                <Icon name="more_vert" />
-            </button>
-        </div>
-    );
+const MyListGridCard: React.FC<{ anime: MyListItem; onEdit: (anime: MyListItem) => void; }> = ({ anime, onEdit }) => {
+  return (
+    <div className="group">
+      <div className="relative">
+        <Link to={`/anime/${anime.slug}`}>
+          <div className="aspect-[2/3] bg-surface-container-high rounded-2xl overflow-hidden transition-transform duration-300">
+            <img src={anime.poster} alt={anime.title} className="w-full h-full object-cover" loading="lazy" />
+          </div>
+        </Link>
+        <button
+          onClick={() => onEdit(anime)}
+          className="absolute top-2 right-2 p-2 rounded-full bg-surface-container-highest shadow-md text-on-surface hover:bg-surface-container-high active:scale-90 transition-all"
+          aria-label={`Edit status for ${anime.title}`}
+        >
+          <Icon name="more_vert" />
+        </button>
+      </div>
+      <Link to={`/anime/${anime.slug}`}>
+        <p className="mt-3 text-base font-medium text-on-surface truncate group-hover:text-primary">
+          {anime.title}
+        </p>
+      </Link>
+    </div>
+  );
 };
 
 
 const MyListPage: React.FC = () => {
   const myListContext = useContext(MyListContext);
+  const search = useSearch();
+
   const [activeTab, setActiveTab] = useState<ListStatus>('watching');
   const [selectedAnime, setSelectedAnime] = useState<MyListItem | null>(null);
+  const [toastInfo, setToastInfo] = useState<{ message: string; visible: boolean; actionTo?: string }>({ message: '', visible: false, actionTo: undefined });
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const statusFromUrl = params.get('status') as ListStatus;
+    if (statusFromUrl && LIST_TABS.some(tab => tab.status === statusFromUrl)) {
+      setActiveTab(statusFromUrl);
+    }
+  }, [search]);
 
   const groupedList = useMemo(() => {
     if (!myListContext?.myList) return {} as Record<ListStatus, MyListItem[]>;
@@ -79,9 +70,28 @@ const MyListPage: React.FC = () => {
   }, [myListContext?.myList]);
 
   const activeList = groupedList[activeTab] || [];
+
+  const showToast = (message: string, newStatus?: ListStatus) => {
+    setToastInfo({
+        message,
+        visible: true,
+        actionTo: newStatus ? `/my-list?status=${newStatus}` : undefined
+    });
+    setTimeout(() => {
+        setToastInfo({ message: '', visible: false, actionTo: undefined });
+    }, 4000);
+  };
   
   const handleEdit = (anime: MyListItem) => {
     setSelectedAnime(anime);
+  };
+  
+  const handleStatusChange = (newStatus: ListStatus) => {
+    showToast(`Moved to "${formatStatusLabel(newStatus)}".`, newStatus);
+  };
+
+  const handleRemove = () => {
+    showToast('Removed from your list.');
   };
 
   const HeaderTabs = (
@@ -142,9 +152,9 @@ const MyListPage: React.FC = () => {
       {HeaderTabs}
       <div className="p-4">
         {activeList.length > 0 ? (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
             {activeList.map((anime) => (
-              <MyListItemCard key={anime.slug} anime={anime} onEdit={handleEdit} />
+              <MyListGridCard key={anime.slug} anime={anime} onEdit={handleEdit} />
             ))}
           </div>
         ) : (
@@ -157,10 +167,19 @@ const MyListPage: React.FC = () => {
 
       {selectedAnime && (
         <AddToListSheet
-            anime={selectedAnime as AnimeDetail} // Casting because sheet expects AnimeDetail, but MyListItem has all necessary props for this context
+            anime={selectedAnime}
             currentStatus={selectedAnime.list_status}
             onClose={() => setSelectedAnime(null)}
+            onStatusChange={handleStatusChange}
+            onRemove={handleRemove}
         />
+      )}
+      
+      {toastInfo.visible && (
+          <Toast
+              message={toastInfo.message}
+              action={toastInfo.actionTo ? { text: 'View List', to: toastInfo.actionTo } : undefined}
+          />
       )}
     </div>
   );

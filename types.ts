@@ -61,6 +61,16 @@ export interface AnimeDetail extends Anime {
   recommendations: Recommendation[];
 }
 
+export interface DownloadResolutionGroup {
+  resolution: string;
+  urls: DownloadUrl[];
+}
+
+export interface EpisodeDownloadCollection {
+  mp4?: DownloadResolutionGroup[];
+  mkv?: DownloadResolutionGroup[];
+}
+
 export interface WatchData {
   episode: string;
   anime: {
@@ -73,6 +83,7 @@ export interface WatchData {
   previous_episode: string | null;
   stream_url: string;
   steramList: { [quality: string]: string };
+  download_urls: EpisodeDownloadCollection;
 }
 
 export interface Pagination {

@@ -8,6 +8,8 @@ interface AddToListSheetProps {
   anime: AnimeDetail | MyListItem;
   currentStatus: ListStatus | null;
   onClose: () => void;
+  onStatusChange: (newStatus: ListStatus) => void;
+  onRemove: () => void;
 }
 
 const LIST_OPTIONS: { status: ListStatus; label: string; icon: string }[] = [
@@ -18,18 +20,20 @@ const LIST_OPTIONS: { status: ListStatus; label: string; icon: string }[] = [
     { status: 'dropped', label: 'Dropped', icon: 'delete' },
 ];
 
-const AddToListSheet: React.FC<AddToListSheetProps> = ({ anime, currentStatus, onClose }) => {
+const AddToListSheet: React.FC<AddToListSheetProps> = ({ anime, currentStatus, onClose, onStatusChange, onRemove }) => {
   const myListContext = useContext(MyListContext);
 
   const handleStatusSelect = async (status: ListStatus) => {
     if (!myListContext) return;
     await myListContext.addToList(anime, status);
+    onStatusChange(status);
     onClose();
   };
   
   const handleRemove = async () => {
     if (!myListContext) return;
     await myListContext.removeFromList(anime.slug);
+    onRemove();
     onClose();
   };
 
