@@ -6,7 +6,7 @@ import Icon from './Icon';
 const navItems = [
   { path: '/', icon: 'home', label: 'Home' },
   { path: '/schedule', icon: 'calendar_month', label: 'Schedule' },
-  { path: '/bookmarks', icon: 'bookmarks', label: 'Bookmarks' },
+  { path: '/my-list', icon: 'video_library', label: 'My List' },
 ];
 
 const BottomNav: React.FC = () => {

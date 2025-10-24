@@ -30,7 +30,7 @@ const SearchPage: React.FC = () => {
 
     try {
       const searchResults = await api.searchAnime(searchQuery);
-      setResults(searchResults);
+      setResults(Array.isArray(searchResults) ? searchResults : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {

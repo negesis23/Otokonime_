@@ -1,57 +1,65 @@
 
-import React, { createContext, useState, useEffect, useMemo } from 'react';
-import type { Anime } from '../types';
+import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react';
+import type { Anime, MyListItem, ListStatus } from '../types';
+import { myListDB } from '../services/db';
 
-interface BookmarksContextType {
-  bookmarks: Anime[];
-  addBookmark: (anime: Anime) => void;
-  removeBookmark: (slug: string) => void;
-  isBookmarked: (slug: string) => boolean;
+interface MyListContextType {
+  myList: MyListItem[];
+  addToList: (anime: Anime, status: ListStatus) => Promise<void>;
+  removeFromList: (slug: string) => Promise<void>;
+  getItem: (slug: string) => MyListItem | undefined;
+  isLoading: boolean;
 }
 
-export const BookmarksContext = createContext<BookmarksContextType | undefined>(undefined);
+export const MyListContext = createContext<MyListContextType | undefined>(undefined);
 
-export const BookmarksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [bookmarks, setBookmarks] = useState<Anime[]>(() => {
+export const MyListProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [myList, setMyList] = useState<MyListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshList = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const savedBookmarks = localStorage.getItem('bookmarks');
-      return savedBookmarks ? JSON.parse(savedBookmarks) : [];
+      const items = await myListDB.getAll();
+      setMyList(items.sort((a, b) => b.added_at.getTime() - a.added_at.getTime()));
     } catch (error) {
-      console.error('Error reading bookmarks from localStorage', error);
-      return [];
+      console.error('Failed to load list from DB', error);
+      setMyList([]);
+    } finally {
+      setIsLoading(false);
     }
-  });
+  }, []);
+
 
   useEffect(() => {
-    try {
-      localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-    } catch (error) {
-      console.error('Error saving bookmarks to localStorage', error);
-    }
-  }, [bookmarks]);
+    refreshList();
+  }, [refreshList]);
 
-  const addBookmark = (anime: Anime) => {
-    setBookmarks((prev) => {
-      if (!prev.find((b) => b.slug === anime.slug)) {
-        return [...prev, anime];
-      }
-      return prev;
-    });
-  };
+  const addToList = useCallback(async (anime: Anime, status: ListStatus) => {
+    await myListDB.addToList(anime, status);
+    await refreshList();
+  }, [refreshList]);
 
-  const removeBookmark = (slug: string) => {
-    setBookmarks((prev) => prev.filter((b) => b.slug !== slug));
-  };
+  const removeFromList = useCallback(async (slug: string) => {
+    await myListDB.removeFromList(slug);
+    await refreshList();
+  }, [refreshList]);
 
-  const isBookmarked = (slug: string) => {
-    return bookmarks.some((b) => b.slug === slug);
-  };
+  const getItem = useCallback((slug: string) => {
+    return myList.find((item) => item.slug === slug);
+  }, [myList]);
 
-  const value = useMemo(() => ({ bookmarks, addBookmark, removeBookmark, isBookmarked }), [bookmarks]);
+  const value = useMemo(() => ({
+    myList,
+    addToList,
+    removeFromList,
+    getItem,
+    isLoading
+  }), [myList, isLoading, addToList, removeFromList, getItem]);
 
   return (
-    <BookmarksContext.Provider value={value}>
+    <MyListContext.Provider value={value}>
       {children}
-    </BookmarksContext.Provider>
+    </MyListContext.Provider>
   );
 };

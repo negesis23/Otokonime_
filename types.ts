@@ -86,5 +86,42 @@ export interface Pagination {
 
 export interface PaginatedAnimeResponse<T> {
     data: T[];
-    pagination: Pagination;
+    pagination?: Pagination | false;
+}
+
+export type ListStatus = 'plan_to_watch' | 'watching' | 'completed' | 'on_hold' | 'dropped';
+
+export interface MyListItem extends Anime {
+  list_status: ListStatus;
+  added_at: Date;
+  // Add optional properties from other Anime types used by AnimeCard
+  current_episode?: string;
+  episode_count?: string;
+}
+
+export interface DownloadUrl {
+  provider: string;
+  url: string;
+}
+
+export interface BatchDownloadUrl {
+  resolution: string;
+  file_size: string;
+  urls: DownloadUrl[];
+}
+
+export interface BatchData {
+  batch: string;
+  download_urls: BatchDownloadUrl[];
+}
+
+export interface ScheduleAnime {
+  title: string;
+  slug: string;
+  otakudesu_url: string;
+}
+
+export interface ScheduleData {
+  day: string;
+  animeList: ScheduleAnime[];
 }

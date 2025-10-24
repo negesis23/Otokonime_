@@ -2,15 +2,21 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRoute } from '../lib/memory-router';
 import { api } from '../services/api';
-import type { Anime, PaginatedAnimeResponse, OngoingAnime, CompleteAnime } from '../types';
+import type { Anime } from '../types';
 import { AnimeCard, AnimeCardSkeleton } from '../components/AnimeCard';
 import AppBar from '../components/AppBar';
 
-type ListType = 'ongoing' | 'complete';
+// Helper function to format slug to title
+const formatSlugToTitle = (slug: string): string => {
+  return slug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
-const ListPage: React.FC = () => {
-  const [match, params] = useRoute("/list/:type");
-  const listType = params?.type as ListType;
+const GenrePage: React.FC = () => {
+  const [match, params] = useRoute("/genre/:slug");
+  const genreSlug = params?.slug;
 
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [status, setStatus] = useState<'loading' | 'loading-more' | 'error' | 'success'>('loading');
@@ -21,19 +27,12 @@ const ListPage: React.FC = () => {
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const fetchAnimes = useCallback(async (page: number) => {
+    if (!genreSlug) return;
     setStatus(page === 1 ? 'loading' : 'loading-more');
     setError(null);
 
     try {
-      let response: PaginatedAnimeResponse<OngoingAnime | CompleteAnime>;
-      if (listType === 'ongoing') {
-        response = await api.getOngoingAnime(page);
-      } else if (listType === 'complete') {
-        response = await api.getCompleteAnime(page);
-      } else {
-        throw new Error('Invalid list type');
-      }
-
+      const response = await api.getAnimeByGenre(genreSlug, page);
       const newData = Array.isArray(response.data) ? response.data : [];
       setAnimes(prev => (page === 1 ? newData : [...prev, ...newData]));
       
@@ -45,21 +44,20 @@ const ListPage: React.FC = () => {
       } else {
         setHasNextPage(false);
       }
-
       setStatus('success');
     } catch (err) {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setStatus('error');
     }
-  }, [listType]);
+  }, [genreSlug]);
 
   // Effect to fetch initial data or reset when type changes
   useEffect(() => {
-    if (!listType) return;
+    if (!genreSlug) return;
     pageToFetch.current = 1;
     setAnimes([]);
     fetchAnimes(1);
-  }, [listType, fetchAnimes]);
+  }, [genreSlug, fetchAnimes]);
 
   // Effect for the IntersectionObserver
   useEffect(() => {
@@ -84,10 +82,7 @@ const ListPage: React.FC = () => {
     };
   }, [hasNextPage, status, fetchAnimes]);
 
-  const title = listType === 'ongoing' ? 'New Episodes' : 'Binge-Watch Now!';
-  const endOfListMessage = listType === 'ongoing' 
-      ? "You've seen all the latest episodes!" 
-      : "You've explored all completed series!";
+  const title = genreSlug ? formatSlugToTitle(genreSlug) : 'Genre';
 
   if (status === 'loading') {
     return (
@@ -130,7 +125,7 @@ const ListPage: React.FC = () => {
 
         {!hasNextPage && animes.length > 0 && (
           <div className="text-center pt-6 text-on-surface-variant">
-            <p>{endOfListMessage}</p>
+            <p>You've reached the end of the {title} list!</p>
           </div>
         )}
       </div>
@@ -138,4 +133,4 @@ const ListPage: React.FC = () => {
   );
 };
 
-export default ListPage;
+export default GenrePage;
