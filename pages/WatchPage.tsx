@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { useRoute, Link } from '../lib/memory-router';
 import { api } from '../services/api';
@@ -77,104 +78,98 @@ const StreamSelection: React.FC<{
     currentStream: StreamLink | null;
     onStreamChange: (stream: StreamLink) => void;
 }> = ({ streams, currentStream, onStreamChange }) => {
-    
-    const groupedStreams = useMemo(() => {
+
+    const [selectedQuality, setSelectedQuality] = useState<string | null>(null);
+
+    const groupedByQuality = useMemo(() => {
         if (!streams) return {};
-        return streams.reduce((acc, stream) => {
-            let provider = stream.provider;
-            // Unify all 'ondesu' variations under a single provider name
-            if (provider.toLowerCase().includes('ondesu')) {
-                provider = 'Ondesu';
-            }
-            if (!acc[provider]) acc[provider] = [];
-            acc[provider].push(stream);
+        const groups = streams.reduce((acc, stream) => {
+            const quality = stream.quality;
+            if (!acc[quality]) acc[quality] = [];
+            acc[quality].push(stream);
             return acc;
         }, {} as Record<string, StreamLink[]>);
+
+        const sortedKeys = Object.keys(groups).sort((a, b) => {
+            const numA = parseInt(a.replace('p', ''));
+            const numB = parseInt(b.replace('p', ''));
+            if (!isNaN(numA) && !isNaN(numB)) {
+                return numB - numA; // Sort numerically descending
+            }
+            return b.localeCompare(a); // Fallback for non-numeric
+        });
+
+        const sortedGroups: Record<string, StreamLink[]> = {};
+        for (const key of sortedKeys) {
+            sortedGroups[key] = groups[key];
+        }
+        return sortedGroups;
     }, [streams]);
 
-    const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-
-    // Effect to set initial provider based on the current stream or a default
     useEffect(() => {
         if (currentStream) {
-            const providerName = currentStream.provider;
-            if (providerName.toLowerCase().includes('ondesu')) {
-                setSelectedProvider('Ondesu');
-            } else {
-                setSelectedProvider(providerName);
+            setSelectedQuality(currentStream.quality);
+        } else if (Object.keys(groupedByQuality).length > 0) {
+            const firstQuality = Object.keys(groupedByQuality)[0];
+            setSelectedQuality(firstQuality);
+            const firstStream = groupedByQuality[firstQuality][0];
+            if (firstStream) {
+                onStreamChange(firstStream);
             }
-        } else if (Object.keys(groupedStreams).length > 0) {
-            // Default to 'Ondesu' if available, otherwise the first one
-            const ondesuProvider = Object.keys(groupedStreams).find(p => p === 'Ondesu');
-            setSelectedProvider(ondesuProvider || Object.keys(groupedStreams)[0]);
         }
-    }, [currentStream, groupedStreams]);
+    }, [currentStream, groupedByQuality, onStreamChange]);
 
-    const handleProviderSelect = (provider: string) => {
-        setSelectedProvider(provider);
-        const qualities = groupedStreams[provider];
-        if (qualities && qualities.length > 0) {
-             const sortedQualities = [...qualities].sort((a, b) => parseInt(b.quality) - parseInt(a.quality));
-             onStreamChange(sortedQualities[0]);
+    const handleQualitySelect = (quality: string) => {
+        setSelectedQuality(quality);
+        const firstStreamOfQuality = groupedByQuality[quality]?.[0];
+        if (firstStreamOfQuality) {
+            onStreamChange(firstStreamOfQuality);
         }
     };
-    
+
     if (!streams || streams.length === 0) {
         return <div className="p-4 text-center text-on-surface-variant text-lg">No streaming sources available.</div>;
     }
 
-    const availableQualities = useMemo(() => {
-        if (!selectedProvider) return [];
-        const qualitiesForProvider = groupedStreams[selectedProvider] || [];
-        
-        const uniqueStreams: StreamLink[] = [];
-        const seenQualities = new Set<string>();
-
-        const sortedQualities = [...qualitiesForProvider].sort((a, b) => {
-            const qualityA = parseInt(a.quality);
-            const qualityB = parseInt(b.quality);
-            return qualityB - qualityA;
-        });
-
-        for (const stream of sortedQualities) {
-            if (!seenQualities.has(stream.quality)) {
-                uniqueStreams.push(stream);
-                seenQualities.add(stream.quality);
-            }
-        }
-        
-        return uniqueStreams;
-    }, [selectedProvider, groupedStreams]);
+    const availableQualities = Object.keys(groupedByQuality);
+    const serversForSelectedQuality = selectedQuality ? groupedByQuality[selectedQuality] : [];
 
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-medium mb-3">Server</h2>
-                <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant">
-                    {Object.keys(groupedStreams).sort().map((provider) => (
+                <h2 className="text-2xl font-medium mb-4">Select Quality</h2>
+                <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+                    {availableQualities.map(quality => (
                         <button
-                            key={provider}
-                            onClick={() => handleProviderSelect(provider)}
-                            className={`w-full p-4 text-left text-lg transition-colors flex justify-between items-center ${selectedProvider === provider ? 'bg-secondary-container text-on-secondary-container font-medium' : 'hover:bg-surface-container-high active:bg-surface-container-highest'}`}
+                            key={quality}
+                            onClick={() => handleQualitySelect(quality)}
+                            className={`py-3 px-5 whitespace-nowrap font-medium text-base rounded-full transition-colors flex-shrink-0 ${
+                                selectedQuality === quality
+                                ? 'bg-secondary-container text-on-secondary-container'
+                                : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                            }`}
                         >
-                            <span>{provider}</span>
-                            {selectedProvider === provider && <Icon name="check_circle" className="text-2xl" />}
+                            {quality}
                         </button>
                     ))}
                 </div>
             </div>
-            {availableQualities.length > 0 && (
+
+            {serversForSelectedQuality.length > 0 && (
                 <div>
-                    <h2 className="text-xl font-medium mb-3">Resolution</h2>
-                    <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant">
-                        {availableQualities.map((stream) => (
+                    <h2 className="text-2xl font-medium mb-4">Select Server</h2>
+                    <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+                        {serversForSelectedQuality.map((stream) => (
                             <button
-                                key={stream.url}
+                                key={`${stream.provider}-${stream.url}`}
                                 onClick={() => onStreamChange(stream)}
-                                className={`w-full p-4 text-left text-lg transition-colors flex justify-between items-center ${currentStream?.url === stream.url ? 'bg-secondary-container text-on-secondary-container font-medium' : 'hover:bg-surface-container-high active:bg-surface-container-highest'}`}
+                                className={`py-3 px-5 whitespace-nowrap font-medium text-base rounded-full transition-colors flex-shrink-0 ${
+                                    currentStream?.url === stream.url
+                                    ? 'bg-secondary-container text-on-secondary-container'
+                                    : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                                }`}
                             >
-                                <span>{stream.quality}</span>
-                                {currentStream?.url === stream.url && <Icon name="check_circle" className="text-2xl" />}
+                                {stream.provider}
                             </button>
                         ))}
                     </div>
@@ -186,73 +181,91 @@ const StreamSelection: React.FC<{
 
 
 const DownloadSection: React.FC<{ downloadGroups: DownloadGroup[] }> = ({ downloadGroups }) => {
-    const [openGroup, setOpenGroup] = useState<string | null>(null);
-
     if (!downloadGroups || downloadGroups.length === 0) return null;
 
     return (
-        <div className="space-y-4">
-            <h2 className="text-2xl font-medium">Download Links</h2>
-            <div className="bg-surface-container rounded-2xl overflow-hidden">
-                {downloadGroups.map((group, groupIndex) => (
-                    <div key={group.format_title} className={`${groupIndex > 0 ? 'border-t border-outline-variant' : ''}`}>
-                        <button
-                            onClick={() => setOpenGroup(prev => prev === group.format_title ? null : group.format_title)}
-                            className="w-full p-5 flex justify-between items-center text-left hover:bg-surface-container-high active:bg-surface-container-highest transition-colors text-lg"
-                            aria-expanded={openGroup === group.format_title}
-                        >
-                            <span className="font-medium flex-1 mr-2">{group.format_title}</span>
-                            <Icon name={openGroup === group.format_title ? 'expand_less' : 'expand_more'} className="transition-transform duration-300 text-3xl" />
-                        </button>
-                        {openGroup === group.format_title && (
-                            <div className="px-5 pb-5 pt-1 space-y-4">
-                                {group.formats.map(format => (
-                                    <div key={format.resolution} className="bg-surface-container-low rounded-2xl p-4">
-                                        <div className="flex justify-between items-center">
-                                            <p className="font-bold text-on-surface text-xl">{format.resolution}</p>
-                                            <p className="text-md font-medium text-on-surface-variant">{format.size}</p>
-                                        </div>
-                                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                            {format.links.map(link => (
-                                                <a
-                                                    key={link.provider}
-                                                    href={link.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center justify-center gap-2 h-12 px-3 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant font-medium text-base transition-colors"
-                                                >
-                                                    <span>{link.provider}</span>
-                                                    <Icon name="open_in_new" className="text-xl" />
-                                                </a>
-                                            ))}
-                                        </div>
+        <div className="space-y-8">
+            {downloadGroups.map(group => {
+                if (group.formats.length === 0) return null;
+                return (
+                    <div key={group.format_title}>
+                        <h2 className="text-2xl font-medium mb-4 leading-tight">Download {group.format_title}</h2>
+                        <div className="bg-surface-container rounded-2xl divide-y divide-outline-variant">
+                            {group.formats.map((format, index) => (
+                                <div key={`${format.resolution}-${index}`} className="p-4 sm:p-5">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="font-bold text-on-surface text-lg">
+                                            {format.resolution}
+                                        </p>
+                                        <p className="text-sm font-medium text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded-md">
+                                            {format.size}
+                                        </p>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        {format.links.map(link => (
+                                            <a
+                                                key={link.provider}
+                                                href={link.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 h-12 px-3 rounded-xl bg-tertiary-container text-on-tertiary-container font-medium text-base transition-all hover:opacity-90 active:scale-95"
+                                            >
+                                                <span className="truncate">{link.provider}</span>
+                                                <Icon name="download" className="text-xl flex-shrink-0" />
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                ))}
-            </div>
+                )
+            })}
         </div>
     );
 };
+
 
 const WatchPageSkeleton = () => (
     <div className="bg-background h-screen flex flex-col animate-pulse">
         <AppBar showBackButton title="" />
         <div className="w-full aspect-video bg-surface-container-high" />
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
-            <div className="h-9 bg-surface-container-high rounded-lg w-3/4" />
-            <div className="h-6 bg-surface-container-high rounded-lg w-1/3" />
-            <div className="grid grid-cols-3 gap-3">
-                <div className="h-14 bg-surface-container rounded-2xl" />
-                <div className="h-14 bg-secondary-container rounded-full" />
-                <div className="h-14 bg-surface-container rounded-2xl" />
+        <main className="flex-1 overflow-y-auto p-6 space-y-10">
+            {/* Episode Header Skeleton */}
+            <div className="space-y-5">
+                <div className="h-9 bg-surface-container-high rounded-lg w-3/4" />
+                <div className="h-6 bg-surface-container-high rounded-lg w-1/3" />
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="h-14 bg-surface-container rounded-2xl" />
+                    <div className="h-14 bg-secondary-container rounded-full" />
+                    <div className="h-14 bg-surface-container rounded-2xl" />
+                </div>
             </div>
-             <div className="h-8 bg-surface-container-high rounded-lg w-1/2 mt-4" />
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="h-16 bg-surface-container-high rounded-2xl" />
-                <div className="h-16 bg-surface-container-high rounded-2xl" />
+            {/* Stream Selection Skeleton */}
+            <div className="space-y-6">
+                 <div>
+                    <div className="h-8 bg-surface-container-high rounded-lg w-1/3 mb-4" />
+                    <div className="flex gap-3">
+                        <div className="h-12 w-24 bg-surface-container-high rounded-full" />
+                        <div className="h-12 w-24 bg-surface-container-high rounded-full" />
+                        <div className="h-12 w-24 bg-surface-container-high rounded-full" />
+                    </div>
+                </div>
+                 <div>
+                    <div className="h-8 bg-surface-container-high rounded-lg w-1/3 mb-4" />
+                    <div className="flex gap-3">
+                        <div className="h-12 w-28 bg-surface-container-high rounded-full" />
+                        <div className="h-12 w-28 bg-surface-container-high rounded-full" />
+                    </div>
+                </div>
+            </div>
+            {/* Download Section Skeleton */}
+            <div className="space-y-6">
+                <div className="h-8 bg-surface-container-high rounded-lg w-2/3 mb-4" />
+                <div className="space-y-4">
+                    <div className="h-32 bg-surface-container rounded-2xl" />
+                    <div className="h-32 bg-surface-container rounded-2xl" />
+                </div>
             </div>
         </main>
     </div>
@@ -271,26 +284,28 @@ const WatchPage: React.FC = () => {
     const { data, loading, error, refetch } = useApi<WatchData>(getEpisodeData);
 
     useEffect(() => {
-        setSelectedStream(null);
-        if (slug) refetch();
-    }, [slug, refetch]);
+        // Reset selected stream when slug changes to avoid showing old video
+        setSelectedStream(null); 
+    }, [slug]);
     
+    // This effect now only runs once when data is loaded
     useEffect(() => {
         if (data?.streamList && data.streamList.length > 0) {
-            const ondesuStream = data.streamList.find(s => s.provider.toLowerCase().includes('ondesu'));
-            if (ondesuStream) {
-                const bestOndesu = data.streamList
-                    .filter(s => s.provider.toLowerCase().includes('ondesu'))
-                    .sort((a, b) => parseInt(b.quality) - parseInt(a.quality))[0];
-                setSelectedStream(bestOndesu);
-                return;
-            }
-            const highQualityStream = data.streamList.find(s => s.quality.includes('720')) || data.streamList.find(s => s.quality.includes('1080'));
-            setSelectedStream(highQualityStream || data.streamList[0]);
+            // Find highest quality stream from any provider
+            const sortedByQuality = [...data.streamList].sort((a, b) => {
+                const numA = parseInt(a.quality.replace('p', ''));
+                const numB = parseInt(b.quality.replace('p', ''));
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return numB - numA; // Sort numerically descending
+                }
+                return b.quality.localeCompare(a.quality); // Fallback for non-numeric
+            });
+            setSelectedStream(sortedByQuality[0]);
         } else if (data?.stream_url) {
+            // Fallback for single stream_url
             setSelectedStream({ quality: 'Default', provider: 'Default', url: data.stream_url });
         }
-    }, [data]);
+    }, [data]); // Depend only on `data`
 
     if (loading) return <WatchPageSkeleton />;
 
@@ -318,7 +333,7 @@ const WatchPage: React.FC = () => {
             <AppBar showBackButton title={data.episode} />
             <VideoPlayer streamUrl={selectedStream?.url || ''} />
             <main className="flex-1 overflow-y-auto">
-                <div className="p-6 space-y-8 pb-8">
+                <div className="p-6 space-y-10 pb-8">
                     <EpisodeHeader
                         title={data.episode}
                         animeSlug={data.anime?.slug}
