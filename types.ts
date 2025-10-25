@@ -61,14 +61,26 @@ export interface AnimeDetail extends Anime {
   recommendations: Recommendation[];
 }
 
-export interface DownloadResolutionGroup {
-  resolution: string;
-  urls: DownloadUrl[];
+export interface StreamLink {
+  quality: string;
+  provider: string;
+  url: string;
 }
 
-export interface EpisodeDownloadCollection {
-  mp4?: DownloadResolutionGroup[];
-  mkv?: DownloadResolutionGroup[];
+export interface DownloadLink {
+    provider: string;
+    url: string;
+}
+
+export interface DownloadFormat {
+    resolution: string;
+    size: string;
+    links: DownloadLink[];
+}
+
+export interface DownloadGroup {
+    format_title: string;
+    formats: DownloadFormat[];
 }
 
 export interface WatchData {
@@ -78,12 +90,12 @@ export interface WatchData {
     otakudesu_url: string;
   };
   has_next_episode: boolean;
-  next_episode: string | null;
+  next_episode_slug: string | null;
   has_previous_episode: boolean;
-  previous_episode: string | null;
+  previous_episode_slug: string | null;
   stream_url: string;
-  steramList: { [quality: string]: string };
-  download_urls: EpisodeDownloadCollection;
+  streamList: StreamLink[];
+  download_urls: DownloadGroup[];
 }
 
 export interface Pagination {
