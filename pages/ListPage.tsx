@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useRoute } from '../lib/memory-router';
+import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Anime, PaginatedAnimeResponse, OngoingAnime, CompleteAnime } from '../types';
 import { AnimeCard, AnimeCardSkeleton } from '../components/AnimeCard';
@@ -9,8 +8,8 @@ import AppBar from '../components/AppBar';
 type ListType = 'ongoing' | 'complete';
 
 const ListPage: React.FC = () => {
-  const [match, params] = useRoute("/list/:type");
-  const listType = params?.type as ListType;
+  const { type } = useParams();
+  const listType = type as ListType;
 
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [status, setStatus] = useState<'loading' | 'loading-more' | 'error' | 'success'>('loading');

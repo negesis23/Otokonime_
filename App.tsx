@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { MemoryRouter as Router, Route, Switch, useLocation } from './lib/memory-router';
+import { MemoryRouter, BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { MyListProvider } from './contexts/BookmarksContext';
 
@@ -16,6 +15,16 @@ import BatchPage from './pages/BatchPage';
 import GenrePage from './pages/GenrePage';
 
 const App: React.FC = () => {
+  // Determine router based on environment.
+  // We explicitly check for production flags. If not found, we assume development/preview mode (MemoryRouter).
+  // This prevents issues where BrowserRouter is used in environments without history API support or with weird base paths.
+  const isProduction = 
+    (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') ||
+    // @ts-ignore
+    (typeof import.meta !== 'undefined' && (import.meta.env?.PROD === true || import.meta.env?.MODE === 'production'));
+
+  const Router = isProduction ? BrowserRouter : MemoryRouter;
+
   return (
     <ThemeProvider>
       <MyListProvider>
@@ -28,23 +37,26 @@ const App: React.FC = () => {
 };
 
 const Main: React.FC = () => {
-  const [location] = useLocation();
-  const hideBottomNav = location.startsWith('/watch/') || location.startsWith('/anime/') || location.startsWith('/batch/');
+  const location = useLocation();
+  const path = location.pathname;
+  const hideBottomNav = path.startsWith('/watch/') || path.startsWith('/anime/') || path.startsWith('/batch/');
 
   return (
     <div className="max-w-screen-sm mx-auto h-screen flex flex-col bg-background">
       <main className="flex-1 overflow-y-auto">
-        <Switch>
-          <Route path="/" component={HomePage} />
-          <Route path="/schedule" component={SchedulePage} />
-          <Route path="/search" component={SearchPage} />
-          <Route path="/my-list" component={MyListPage} />
-          <Route path="/anime/:slug" component={DetailPage} />
-          <Route path="/watch/:slug" component={WatchPage} />
-          <Route path="/list/:type" component={ListPage} />
-          <Route path="/batch/:slug" component={BatchPage} />
-          <Route path="/genre/:slug" component={GenrePage} />
-        </Switch>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/my-list" element={<MyListPage />} />
+          <Route path="/anime/:slug" element={<DetailPage />} />
+          <Route path="/watch/:slug" element={<WatchPage />} />
+          <Route path="/list/:type" element={<ListPage />} />
+          <Route path="/batch/:slug" element={<BatchPage />} />
+          <Route path="/genre/:slug" element={<GenrePage />} />
+          {/* Catch-all route to handle 404s or redirects, useful for BrowserRouter edge cases */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
       {!hideBottomNav && <BottomNav />}
     </div>

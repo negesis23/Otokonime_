@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from '../lib/memory-router';
+import { Link } from 'react-router-dom';
 import type { Anime, OngoingAnime, CompleteAnime } from '../types';
 import Icon from './Icon';
 

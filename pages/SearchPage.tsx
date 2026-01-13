@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation, useSearch } from '../lib/memory-router';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Anime } from '../types';
 import { AnimeCard, AnimeCardSkeleton } from '../components/AnimeCard';
@@ -7,12 +7,12 @@ import Icon from '../components/Icon';
 import AppBar from '../components/AppBar';
 
 const SearchPage: React.FC = () => {
-  const [location, setLocation] = useLocation();
-  const search = useSearch();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const getQueryFromUrl = useCallback(() => {
-    return new URLSearchParams(search).get('q') || '';
-  }, [search]);
+    return searchParams.get('q') || '';
+  }, [searchParams]);
 
   const [query, setQuery] = useState(getQueryFromUrl());
   const [results, setResults] = useState<Anime[]>([]);
@@ -52,7 +52,7 @@ const SearchPage: React.FC = () => {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedQuery = query.trim();
-    setLocation(trimmedQuery ? `/search?q=${trimmedQuery}` : '/search');
+    navigate(trimmedQuery ? `/search?q=${trimmedQuery}` : '/search');
   };
 
   const queryFromUrl = getQueryFromUrl();

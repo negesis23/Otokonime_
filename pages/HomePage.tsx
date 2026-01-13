@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Link, useLocation } from '../lib/memory-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useApi } from '../hooks/useApi';
 import type { HomeData, Anime, Genre } from '../types';
@@ -43,12 +42,12 @@ const HomePage: React.FC = () => {
   const { data: genres, loading: genresLoading, error: genresError } = useApi<Genre[]>(api.getGenres);
   const themeContext = React.useContext(ThemeContext);
   const [query, setQuery] = useState('');
-  const [location, setLocation] = useLocation();
+  const navigate = useNavigate();
   
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      setLocation(`/search?q=${encodeURIComponent(query)}`);
+      navigate(`/search?q=${encodeURIComponent(query)}`);
     }
   };
 
@@ -119,7 +118,7 @@ const AnimeCarousel: React.FC<AnimeCarouselProps> = ({ title, animes, loading, v
   <section className="px-6">
     <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-medium">{title}</h2>
-        <Link href={viewAllLink} className="text-primary font-medium hover:underline">
+        <Link to={viewAllLink} className="text-primary font-medium hover:underline">
             View All
         </Link>
     </div>

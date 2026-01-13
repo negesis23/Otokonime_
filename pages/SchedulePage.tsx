@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Link } from '../lib/memory-router';
+import { Link } from 'react-router-dom';
 import AppBar from '../components/AppBar';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
@@ -21,7 +20,7 @@ const SchedulePage: React.FC = () => {
               <h2 className="text-2xl font-medium text-primary mb-3 px-2">{daySchedule.day}</h2>
               <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant">
                 {daySchedule.animeList.map((anime) => (
-                  <Link key={anime.slug} href={`/anime/${anime.slug}`} className="block p-4 hover:bg-surface-container-high active:bg-surface-container-highest transition-colors">
+                  <Link key={anime.slug} to={`/anime/${anime.slug}`} className="block p-4 hover:bg-surface-container-high active:bg-surface-container-highest transition-colors">
                     <p className="text-lg font-medium text-on-surface">{anime.title}</p>
                   </Link>
                 ))}

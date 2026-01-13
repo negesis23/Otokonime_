@@ -1,6 +1,5 @@
-
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
-import { useRoute, Link } from '../lib/memory-router';
+import { useParams, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useApi } from '../hooks/useApi';
 import type { WatchData, StreamLink, DownloadGroup } from '../types';
@@ -46,7 +45,8 @@ const EpisodeHeader: React.FC<{
         </div>
         <div className="grid grid-cols-3 gap-3">
             <Link
-                to={hasPrev && prevSlug ? `/watch/${prevSlug}` : undefined}
+                to={hasPrev && prevSlug ? `/watch/${prevSlug}` : '#'}
+                onClick={e => !hasPrev && e.preventDefault()}
                 className={`flex items-center justify-center gap-2 h-14 rounded-2xl transition-colors ${!hasPrev ? 'opacity-50 cursor-not-allowed bg-surface-container' : 'bg-surface-container hover:bg-surface-container-high active:bg-surface-container-highest'}`}
             >
                 <Icon name="skip_previous" className="text-3xl" />
@@ -54,7 +54,8 @@ const EpisodeHeader: React.FC<{
             </Link>
 
             <Link
-                to={animeSlug ? `/anime/${animeSlug}?tab=episodes` : undefined}
+                to={animeSlug ? `/anime/${animeSlug}?tab=episodes` : '#'}
+                onClick={e => !animeSlug && e.preventDefault()}
                 className={`flex items-center justify-center h-14 rounded-full transition-colors ${!animeSlug ? 'opacity-50 cursor-not-allowed bg-surface-container' : 'bg-secondary-container text-on-secondary-container hover:opacity-90'}`}
                 aria-label="View all episodes"
             >
@@ -62,7 +63,8 @@ const EpisodeHeader: React.FC<{
             </Link>
 
             <Link
-                to={hasNext && nextSlug ? `/watch/${nextSlug}` : undefined}
+                to={hasNext && nextSlug ? `/watch/${nextSlug}` : '#'}
+                onClick={e => !hasNext && e.preventDefault()}
                 className={`flex items-center justify-center gap-2 h-14 rounded-2xl transition-colors ${!hasNext ? 'opacity-50 cursor-not-allowed bg-surface-container' : 'bg-surface-container hover:bg-surface-container-high active:bg-surface-container-highest'}`}
             >
                 <span className="font-medium text-lg hidden sm:inline">Next</span>
@@ -272,8 +274,7 @@ const WatchPageSkeleton = () => (
 );
 
 const WatchPage: React.FC = () => {
-    const [match, params] = useRoute("/watch/:slug");
-    const slug = params?.slug;
+    const { slug } = useParams();
     const [selectedStream, setSelectedStream] = useState<StreamLink | null>(null);
 
     const getEpisodeData = useCallback(() => {

@@ -1,5 +1,5 @@
 import React, { useContext, useCallback, useState, useMemo, useRef, useEffect } from 'react';
-import { Link, useRoute, useSearch } from '../lib/memory-router';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { useApi } from '../hooks/useApi';
 import type { AnimeDetail, Episode, ListStatus, Recommendation } from '../types';
@@ -143,7 +143,7 @@ const EpisodeList: React.FC<{ episodes: Episode[], batch: AnimeDetail['batch'] }
             <div className="bg-surface-container rounded-2xl overflow-hidden">
                 {sortedAndFilteredEpisodes.map((ep, index) => (
                     <React.Fragment key={ep.slug}>
-                        <Link href={`/watch/${ep.slug}`} className="block">
+                        <Link to={`/watch/${ep.slug}`} className="block">
                             <div className="p-4 flex items-center gap-4 hover:bg-surface-container-high active:bg-surface-container-highest transition-colors min-h-[5rem]">
                                 <div className="w-12 h-12 flex items-center justify-center bg-primary-container text-on-primary-container rounded-xl font-bold text-lg">
                                     {getEpisodeLabel(ep.episode)}
@@ -215,9 +215,8 @@ const DetailTabs: React.FC<{ activeTab: Tab, setActiveTab: (tab: Tab) => void }>
 
 
 const DetailPage: React.FC = () => {
-    const [match, params] = useRoute("/anime/:slug");
-    const search = useSearch();
-    const slug = params?.slug;
+    const { slug } = useParams();
+    const [searchParams] = useSearchParams();
 
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('about');
@@ -240,12 +239,11 @@ const DetailPage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const queryParams = new URLSearchParams(search);
-        const tabFromUrl = queryParams.get('tab') as Tab;
+        const tabFromUrl = searchParams.get('tab') as Tab;
         if (tabFromUrl === 'episodes' || tabFromUrl === 'recommendations') {
             setActiveTab(tabFromUrl);
         }
-    }, [search]);
+    }, [searchParams]);
 
     const getDetails = useCallback(() => {
         if (!slug) return Promise.reject(new Error('Anime slug is missing in URL.'));

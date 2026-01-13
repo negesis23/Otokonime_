@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useRoute } from '../lib/memory-router';
+import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Anime } from '../types';
 import { AnimeCard, AnimeCardSkeleton } from '../components/AnimeCard';
@@ -15,8 +14,7 @@ const formatSlugToTitle = (slug: string): string => {
 };
 
 const GenrePage: React.FC = () => {
-  const [match, params] = useRoute("/genre/:slug");
-  const genreSlug = params?.slug;
+  const { slug: genreSlug } = useParams();
 
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [status, setStatus] = useState<'loading' | 'loading-more' | 'error' | 'success'>('loading');

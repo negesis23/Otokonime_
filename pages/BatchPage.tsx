@@ -1,6 +1,5 @@
-
 import React, { useCallback } from 'react';
-import { useRoute } from '../lib/memory-router';
+import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { useApi } from '../hooks/useApi';
 import type { BatchData, BatchDownloadUrl } from '../types';
@@ -8,8 +7,7 @@ import AppBar from '../components/AppBar';
 import Icon from '../components/Icon';
 
 const BatchPage: React.FC = () => {
-  const [match, params] = useRoute("/batch/:slug");
-  const slug = params?.slug;
+  const { slug } = useParams();
 
   const getBatchData = useCallback(() => {
     if (!slug) {

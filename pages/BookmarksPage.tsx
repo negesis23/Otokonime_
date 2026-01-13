@@ -1,5 +1,5 @@
 import React, { useContext, useState, useMemo, useEffect } from 'react';
-import { Link, useSearch } from '../lib/memory-router';
+import { Link, useSearchParams } from 'react-router-dom';
 import { MyListContext } from '../contexts/BookmarksContext';
 import Icon from '../components/Icon';
 import type { ListStatus, MyListItem } from '../types';
@@ -47,19 +47,18 @@ const MyListGridCard: React.FC<{ anime: MyListItem; onEdit: (anime: MyListItem) 
 
 const MyListPage: React.FC = () => {
   const myListContext = useContext(MyListContext);
-  const search = useSearch();
+  const [searchParams] = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<ListStatus>('watching');
   const [selectedAnime, setSelectedAnime] = useState<MyListItem | null>(null);
   const [toastInfo, setToastInfo] = useState<{ message: string; visible: boolean; actionTo?: string }>({ message: '', visible: false, actionTo: undefined });
 
   useEffect(() => {
-    const params = new URLSearchParams(search);
-    const statusFromUrl = params.get('status') as ListStatus;
+    const statusFromUrl = searchParams.get('status') as ListStatus;
     if (statusFromUrl && LIST_TABS.some(tab => tab.status === statusFromUrl)) {
       setActiveTab(statusFromUrl);
     }
-  }, [search]);
+  }, [searchParams]);
 
   const groupedList = useMemo(() => {
     if (!myListContext?.myList) return {} as Record<ListStatus, MyListItem[]>;

@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Link, useLocation } from '../lib/memory-router';
+import { Link, useLocation } from 'react-router-dom';
 import Icon from './Icon';
 
 const navItems = [
@@ -10,13 +9,13 @@ const navItems = [
 ];
 
 const BottomNav: React.FC = () => {
-  const [location] = useLocation();
+  const location = useLocation();
 
   return (
     <nav className="bg-surface-container-low shadow-lg sticky bottom-0 z-10">
       <div className="flex justify-around items-center h-24">
         {navItems.map((item) => {
-          const isActive = location === item.path;
+          const isActive = location.pathname === item.path;
           return (
             <Link
               key={item.path}
