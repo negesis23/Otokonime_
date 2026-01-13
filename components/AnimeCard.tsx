@@ -48,7 +48,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, simpleView = false 
         {!simpleView && (
           <div className="absolute top-2 left-2 right-2 flex justify-between items-center">
             {anime.rating ? (
-              <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
+              <div className="flex items-center gap-1 bg-black/50 text-white text-xs font-semibold px-2 py-1 rounded-full">
                   <Icon name="star" className="text-sm text-yellow-400" />
                   <span>{anime.rating}</span>
               </div>
